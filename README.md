@@ -193,12 +193,45 @@ mkdir -p ~/dev/repo/jar \
 
 * If the Java version is not standard (_e.g._, on the BDP Prod EC2 instances),
   the Jar may have to be rebuilt locally from
-  [the sources](https://github.com/apache/parquet-mr.git)
-  (with `mvn clean package -Plocal`):
+  [the sources](https://github.com/apache/parquet-mr.git):
 ```bash
 $ mkdir -p ~/tmp && git clone https://github.com/apache/parquet-mr.git ~/tmp/parquet-mr
-$ cd ~/tmp/parquet-mr/parquet-tools
+$ cd ~/tmp/parquet-mr
+```
+  + Change the Thrift version in the `pom.xml` file
+    - On RedHat-7/CentOS-7/Amazon-Linux-2:
+```bash
+$ thrift --version
+Thrift version 0.9.1
+```
+    - On RedHat-8/CentOS-8:
+```bash
+$ Thrift version 0.13.0
+```
+  + Spot the following two lines in `pom.xml` and change the version
+    of `thrift` accordingly:
+```bash
+$ grep -Hin "thrift.version" pom.xml
+```
+```xml
+    <thrift.version>0.12.0</thrift.version>
+    <format.thrift.version>0.12.0</format.thrift.version>
+```
+  + For instance, on RedHat-8/CentOS-8:
+```bash
+$ vi pom.xml
+$ grep -Hin "thrift.version" pom.xml
+pom.xml:97:    <thrift.version>0.13.0</thrift.version>
+pom.xml:98:    <format.thrift.version>0.13.0</format.thrift.version>
+pom.xml:492:            <exclude>thrift-${thrift.version}/**</exclude>
+pom.xml:493:            <exclude>thrift-${thrift.version}.tar.gz</exclude>
+pom.xml:617:        <thrift.version>0.9.0</thrift.version>
+```
+  + Build all the Jar artifacts, including `parquet-tools`:
+```bash
 $ mvn clean package -Plocal
+$ ls -laFh parquet-tools/target/parquet-tools-1.12.0-SNAPSHOT.jar
+-rw-rw-r-- 1 user group 67M Aug  3 20:59 parquet-tools/target/parquet-tools-1.12.0-SNAPSHOT.jar
 ```
   + If there is an issue with `fasterxml.jackson` in doing so,
   https://stackoverflow.com/a/28050041/798053 may be worth a look
