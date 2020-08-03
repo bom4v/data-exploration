@@ -170,7 +170,7 @@ Scala code runner version 2.12.8 -- Copyright 2002-2018, LAMP/EPFL and Lightbend
 ## Parquet tools
 
 ### MacOS
-
+* Install with Homebrew:
 ```bash
 $ brew install parquet-tools
 ```
@@ -192,9 +192,15 @@ mkdir -p ~/dev/repo/jar \
 ```
 
 * If the Java version is not standard (_e.g._, on the BDP Prod EC2 instances),
-  the Jar may have to be rebuilt locally from the sources
-  (with `mvn clean package -Plocal`).
-  If there is an issue with `fasterxml.jackson` in doing so,
+  the Jar may have to be rebuilt locally from
+  [the sources](https://github.com/apache/parquet-mr.git)
+  (with `mvn clean package -Plocal`):
+```bash
+$ mkdir -p ~/tmp && git clone https://github.com/apache/parquet-mr.git ~/tmp/parquet-mr
+$ cd ~/tmp/parquet-mr/parquet-tools
+$ mvn clean package -Plocal
+```
+  + If there is an issue with `fasterxml.jackson` in doing so,
   https://stackoverflow.com/a/28050041/798053 may be worth a look
   (just add the corresponding `jackson` dependency rules at the end of
   the `pom.xml` file, itself at the top directory of the Parquet MR project).
