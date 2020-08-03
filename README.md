@@ -121,12 +121,101 @@ $ cat ~/tmp/hadoop/output/part*
 1       principal.
 ```
 
+## Ant
+* References:
+  + Install (Ant 1.10.8): https://ant.apache.org/manual/index.html
+  + Downloads: https://ant.apache.org/bindownload.cgi  
+
+### Linux
+* Donwload the Ant binary distribution:
+```bash
+$ ANT_VER="1.10.8"
+$ sudo mkdir -p /opt/ant/tarballs && chown -R ${USER} /opt/ant && \
+  wget https://downloads.apache.org/ant/binaries/apache-ant-${ANT_VER}-bin.tar.bz2 \
+  -O /opt/ant/apache-ant-${ANT_VER}-bin.tar.bz2 && \
+  tar jxf /opt/ant/apache-ant-${ANT_VER}-bin.tar.bz2 -C /opt/ant && \
+  mv /opt/ant/apache-ant-${ANT_VER}-bin.tar.bz2 /opt/ant/tarballs/
+```
+
+* Add Ant set up in `~/.bashrc`:
+```bash
+$ cat >> ~/.bashrc << _EOF
+
+# Ant
+ANT_VER="1,10.8"
+export ANT_HOME="/opt/ant/apache-ant-\${ANT_VER}"
+export PATH="\${ANT_HOME}/bin:\${PATH}"
+
+_EOF
+. ~/.bashrc
+```
+
+* Check the version of Ant:
+```bash
+$ ant -version
+Apache Ant(TM) version 1.10.8 compiled on May 10 2020
+```
+
+* Install Ant dependencies:
+```bash
+$ ant -f ${ANT_HOME}/fetch.xml -Ddest=system
+```
+
+* Copy the Ant Jar to `~/.ant/lib`:
+```bash
+$ mkdir -p ~/.ant/lib && cp -a ${ANT_HOME}/lib/* ~/.ant/lib/
+```
+
 ## Thrift
 * Reference: https://thrift-tutorial.readthedocs.io/en/latest/installation.html
 
-### RedHat/CentOS/Fedora
+### RedHat-8/CentOS-8/Fedora
+* Use the native package manager to install Thrift:
 ```bash
-$ sudo yum -y install thrift-devel libthrift-java
+$ sudo dnf -y install thrift
+```
+
+### General for Linux
+* Reference: http://thrift.apache.org/download
+
+* Install Ant, Bison and Yacc:
+  + On RedHat-7/CentOS-7/Amazon-Linux-2:
+```bash
+$ sudo yum -y install ant automake libtool make byacc byaccj bison-runtime bison-devel flex g++ boost-devel
+```
+  + On Debian/Ubuntu:
+```bash
+$ sudo apt update && apt -y install ant automake bison flex g++ git libboost-all-dev libevent-dev libssl-dev libtool make pkg-config
+```
+
+* Configure the build for Thrift:
+```bash
+$ THRIFT_VER="0.12.0"
+$ sudo mkdir -p /opt/thrift/tarballs && sudo chown -R ${USER} /opt/thrift && \
+  wget "https://downloads.apache.org/thrift/${THRIFT_VER}/thrift-${THRIFT_VER}.tar.gz" \
+  -O /opt/thrift/thrift-${THRIFT_VER}.tar.gz && \
+  tar zxf /opt/thrift/thrift-${THRIFT_VER}.tar.gz -C /opt/thrift && \
+  mv /opt/thrift/thrift-${THRIFT_VER}.tar.gz /opt/thrift/tarballs/
+$ cd /opt/thrift/thrift-${THRIFT_VER} && \
+  ./bootstrap.sh && \
+  ./configure
+```
+
+* Fix the Maven repository scheme from http to https:
+```bash
+$ sed -i -e 's|mvn.repo=http://repo1.maven.org/maven2|mvn.repo=https://repo1.maven.org/maven2|g' lib/java/gradle.properties
+```
+
+* Build and install Thrift:
+```bash
+  make && \
+  sudo make install
+```
+
+* Check the version of Thrift:
+```bash
+$ thrift --version
+Thrift version 0.12.0
 ```
 
 ## Scala
@@ -227,12 +316,6 @@ pom.xml:492:            <exclude>thrift-${thrift.version}/**</exclude>
 pom.xml:493:            <exclude>thrift-${thrift.version}.tar.gz</exclude>
 pom.xml:617:        <thrift.version>0.9.0</thrift.version>
 ```
-  + Build all the Jar artifacts, including `parquet-tools`:
-```bash
-$ mvn clean package -Plocal
-$ ls -laFh parquet-tools/target/parquet-tools-1.12.0-SNAPSHOT.jar
--rw-rw-r-- 1 user group 67M Aug  3 20:59 parquet-tools/target/parquet-tools-1.12.0-SNAPSHOT.jar
-```
   + If there is an issue with `fasterxml.jackson` in doing so,
   https://stackoverflow.com/a/28050041/798053 may be worth a look
   (just add the corresponding `jackson` dependency rules at the end of
@@ -256,20 +339,28 @@ $ ls -laFh parquet-tools/target/parquet-tools-1.12.0-SNAPSHOT.jar
       <version>2.9.10</version>
     </dependency>
 ```
-
+  + Build all the Jar artifacts, including `parquet-tools`:
+```bash
+$ mvn clean package -Plocal
+$ ls -laFh parquet-tools/target/parquet-tools-1.12.0-SNAPSHOT.jar
+-rw-rw-r-- 1 user group 67M Aug  3 20:59 parquet-tools/target/parquet-tools-1.12.0-SNAPSHOT.jar
+```
+  + Copy the JAR package into a place where the user will find it:
+```bash
+$ cp -a parquet-tools/target/parquet-tools-1.12.0-SNAPSHOT.jar ~/dev/repo/jar/
+```
 * Any user can then add the following alias:
 ```bash
 $ cat >> ~/.bash_aliases << _EOF
 
 # Parquet tools
-alias parquet-tools='java -jar ~/dev/repo/jar/parquet-tools-1.11.0.jar'
+alias parquet-tools='java -jar ~/dev/repo/jar/parquet-tools-1.12.0-SNAPSHOT.jar
 
 _EOF
 $ . ~/.bash_aliases
 ```
 
 * Install ORC tools:
-```bash
 $ sudo snap install orc
 ```
 
